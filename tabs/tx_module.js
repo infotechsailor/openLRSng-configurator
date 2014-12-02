@@ -301,13 +301,14 @@ function tab_initialize_tx_module() {
         // Basic settings
 
         // profile
-        $('select[name="profile"]').val(CONFIGURATOR.activeProfile);
+        $('select[name="profile"]').val(CONFIGURATOR.activeProfile & 0x03);
         $('select[name="profile"]').change(function () {
             var profile = parseInt($(this).val());
+            var profilesend = profile + (parseInt($('select[name="profile_switch"]').val()) ? 0x80 : 0x00);
 
             GUI.log(chrome.i18n.getMessage('tx_module_requesting_profile', [profile + 1]));
 
-            PSP.send_message(PSP.PSP_SET_ACTIVE_PROFILE, profile, false, function () {
+            PSP.send_message(PSP.PSP_SET_ACTIVE_PROFILE, profilesend, false, function () {
                 // profile switched on the MCU side, pull data corresponding to this profile
                 CONFIGURATOR.activeProfile = profile; // we don't need to request activeProfile as we know the value already
 
@@ -318,6 +319,26 @@ function tab_initialize_tx_module() {
                 }
             });
         });
+
+        // profile_switch
+        $('select[name="profile_switch"]').val((CONFIGURATOR.activeProfile & 0x80)?1:0);
+        $('select[name="profile_switch"]').change(function () {
+            var profile = parseInt($('select[name="profile"]').val();
+            var profilesend = profile + (parseInt($('select[name="profile_switch"]').val()) ? 0x80 : 0x00);
+
+            GUI.log(chrome.i18n.getMessage('tx_module_requesting_profile', [profile + 1]));
+
+            PSP.send_message(PSP.PSP_SET_ACTIVE_PROFILE, profilesend, false, function () {
+                // profile switched on the MCU side, pull data corresponding to this profile
+                CONFIGURATOR.activeProfile = profile; // we don't need to request activeProfile as we know the value already
+
+                PSP.send_message(PSP.PSP_REQ_TX_CONFIG, false, false, get_bind_data);
+
+                function get_bind_data() {
+                    PSP.send_message(PSP.PSP_REQ_BIND_DATA, false, false, tab_initialize_tx_module);
+                }
+            });
+
 
         $('input[name="maximum_desired_frequency"]').val((TX_CONFIG.max_frequency / 1000).toFixed(0));
 
@@ -436,7 +457,7 @@ function tab_initialize_tx_module() {
 
         // UI hooks
         $('a.clone_profile').click(function() {
-            var initial_profile = parseInt($('select[name="profile"]').val()),
+            var initial_profile = parseInt($('select[name="profile"]').val()) + (parseInt($('select[name="profile_switch"]').val()) ? 0x80 : 0x00),
                 profiles_saved = 0;
 
             function save_profile(profile) {

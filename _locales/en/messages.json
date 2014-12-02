@@ -819,6 +819,12 @@
     "tx_module_clone_title": {
         "message": "Clone settings in this profile to all profiles (overwrites previous settings)"
     },
+    "tx_module_profile_switch": {
+        "message": "Set profile by switch"
+    },
+    "tx_module_profile_switch_title": {
+        "message": "If enabled TX module will select profile by switch position (mode switch)"
+    },
     "tx_module_operating_frequency": {
         "message": "Operating Frequency (kHz)"
     },
